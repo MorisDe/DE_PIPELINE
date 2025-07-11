@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  # Kafka broker running in KRaft mode (no Zookeeper needed)
+  # Kafka broker running in KRaft mode (Zookeeper decrapted in KAFKA)
   kafka:
     image: confluentinc/cp-kafka:7.6.0
     hostname: kafka
@@ -46,7 +46,7 @@ services:
       kafka:
         condition: service_healthy
     ports:
-      - "8082:8081"  # Fixed: Changed from 8081:8081 to 8082:8081
+      - "8082:8081" 
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:29092'
@@ -96,7 +96,7 @@ services:
       CONNECT_REST_PORT: 8083
       CONNECT_PLUGIN_PATH: /kafka/connect
 
-      # ✅ Proper log4j configuration via environment variables
+     
       CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
       CONNECT_LOG4J_LOGGER_ORG_APACHE_KAFKA_CONNECT_RUNTIME_REST: WARN
       CONNECT_LOG4J_LOGGER_ORG_REFLECTIONS: ERROR
@@ -107,7 +107,8 @@ services:
       timeout: 10s
       retries: 10
       start_period: 60s
-  
+
+  #APACHE FLINK Image
   jobmanager:
     image: apache/flink:1.18.0-scala_2.12-java11
     platform: linux/amd64
@@ -184,6 +185,7 @@ services:
       - postgres
   
 
+  #DataWarehouse to Accept Data From Postgres
   starrocks-fe-0:
     image: starrocks/fe-ubuntu:3.3-latest
     hostname: starrocks-fe-0
@@ -278,7 +280,7 @@ services:
       CONNECT_REST_PORT: 8083
       CONNECT_PLUGIN_PATH: /kafka/connect
 
-      # ✅ Proper log4j configuration
+    
       CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
       CONNECT_LOG4J_LOGGER_ORG_APACHE_KAFKA_CONNECT_RUNTIME_REST: WARN
       CONNECT_LOG4J_LOGGER_ORG_REFLECTIONS: ERROR
@@ -290,7 +292,7 @@ services:
       retries: 10
       start_period: 60s
 
-  # Source MySQL database (the spaghetti DB you want to extract from)
+ 
   mysql:
     image: mysql:8.1
     hostname: mysql
@@ -298,10 +300,10 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: new_db
-      MYSQL_USER: debezium
-      MYSQL_PASSWORD: debezium
+      MYSQL_ROOT_PASSWORD: add your DB password
+      MYSQL_DATABASE: add your DB name
+      MYSQL_USER: debezium #Debezium
+      MYSQL_PASSWORD: debezium #Debezium Ensure proper permissions are given to MYSQL
     command:
       - --server-id=1
       - --log-bin=mysql-bin
@@ -318,7 +320,7 @@ services:
       timeout: 10s
       retries: 5
 
-  # Target PostgreSQL database (clean, transformed structure)
+ 
   postgres:
     image: postgres:15
     hostname: postgres
@@ -326,9 +328,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: rathishnair
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: new_db_master
+      POSTGRES_USER: #your postgresuser name
+      POSTGRES_PASSWORD: #your postgresuser password
+      POSTGRES_DB: #your postgresuser DB
     command:
       - postgres
       - -c
@@ -340,9 +342,9 @@ services:
       - -c
       - wal_sender_timeout=60s
       - -c
-      - wal_writer_delay=10ms              # Faster WAL writes
+      - wal_writer_delay=10ms              
       - -c
-      - commit_delay=100                   # Micro-batch commits
+      - commit_delay=100                   
       - -c
       - checkpoint_completion_target=0.9
       - -c
@@ -367,10 +369,11 @@ services:
       KAFKA_BROKERCONNECT: kafka:29092
       JVM_OPTS: "-Xms128M -Xmx256M"
       SERVER_SERVLET_CONTEXTPATH: "/"
-      # Optional: allow topic deletion (risky, but useful for dev)
+     
       KAFKA_PROPERTIES: |
-        delete.topic.enable=true
-      # Optional: disable UI readonly mode (for interactivity)
+        delete.topic.enable=true -->Allows for topic deletion
+        
+    
       KAFKA_ALLOW_TOPIC_CREATION: "true"
     depends_on:
       kafka:
@@ -383,8 +386,8 @@ services:
 
 
 volumes:
-  kafka-logs:    # Persistent storage for Kafka logs
-  mysql-data:    # Persistent storage for MySQL data
+  kafka-logs:   
+  mysql-data:   
   postgres-data:
   singleton_fe0_data:
   singleton_be0_data:
